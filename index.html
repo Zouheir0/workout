@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AuraTrack - Ultimate Fitness Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --primary: #0ea5e9; /* Cyan-blue */
+            --secondary: #8b5cf6; /* Purple */
+            --bg-dark: #09090b;
+            --glass-bg: rgba(24, 24, 27, 0.6);
+            --glass-border: rgba(255, 255, 255, 0.08);
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-dark);
+            color: #e4e4e7;
+            overflow-x: hidden;
+        }
+
+        /* Animated Background Orbs */
+        .bg-orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(120px);
+            z-index: -1;
+            animation: float 20s infinite ease-in-out alternate;
+        }
+        .orb-1 { width: 500px; height: 500px; background: rgba(14, 165, 233, 0.15); top: -100px; left: -100px; animation-delay: 0s; }
+        .orb-2 { width: 400px; height: 400px; background: rgba(139, 92, 246, 0.15); bottom: -100px; right: -50px; animation-delay: -5s; }
+        .orb-3 { width: 300px; height: 300px; background: rgba(16, 185, 129, 0.1); top: 50%; left: 50%; transform: translate(-50%, -50%); animation-delay: -10s; }
+
+        @keyframes float {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(30px, 50px) scale(1.1); }
+        }
+
+        /* Glassmorphism Cards */
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            border-radius: 1.5rem;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+            transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+        }
+        .glass-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(14, 165, 233, 0.3);
+            box-shadow: 0 10px 40px rgba(14, 165, 233, 0.1);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.4); }
+
+        /* Custom Animated Checkbox */
+        .cbx {
+            -webkit-user-select: none; user-select: none; cursor: pointer; padding: 6px 8px; border-radius: 6px; overflow: hidden; transition: all 0.2s ease; display: inline-block;
+        }
+        .cbx:not(:last-child) { margin-right: 6px; }
+        .cbx:hover { background: rgba(255,255,255,0.05); }
+        .cbx span { float: left; vertical-align: middle; transform: translate3d(0, 0, 0); }
+        .cbx span:first-child { position: relative; width: 24px; height: 24px; border-radius: 6px; transform: scale(1); border: 1px solid #52525b; transition: all 0.2s ease; box-shadow: 0 1px 1px rgba(0,16,75,0.05); }
+        .cbx span:first-child svg { position: absolute; top: 5px; left: 4px; fill: none; stroke: #fff; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 16px; stroke-dashoffset: 16px; transition: all 0.3s ease; transition-delay: 0.1s; transform: translate3d(0, 0, 0); }
+        .cbx span:last-child { padding-left: 12px; line-height: 24px; font-weight: 600; color: #a1a1aa; transition: all 0.2s ease; }
+        .cbx span:last-child:after { content: ""; position: absolute; top: 50%; left: 42px; right: 8px; height: 1px; background: #52525b; transform: scaleX(0); transform-origin: left; transition: transform 0.3s ease; }
+        .cbx input[type="checkbox"] { display: none; }
+        .cbx input[type="checkbox"]:checked + span:first-child { background: var(--primary); border-color: var(--primary); animation: wave-4 0.4s ease; }
+        .cbx input[type="checkbox"]:checked + span:first-child svg { stroke-dashoffset: 0; }
+        .cbx input[type="checkbox"]:checked + span:last-child { color: #fff; }
+        .cbx input[type="checkbox"]:checked + span:last-child:after { transform: scaleX(1); }
+        
+        @keyframes wave-4 { 50% { transform: scale(0.9); } }
+
+        /* Gym Day Toggles */
+        .gym-day {
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .gym-day.active {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            box-shadow: 0 0 15px rgba(14, 165, 233, 0.5);
+            border-color: transparent;
+            transform: scale(1.05);
+        }
+
+        /* Input fields */
+        .glass-input {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--glass-border);
+            transition: all 0.3s ease;
+        }
+        .glass-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 10px rgba(14, 165, 233, 0.2);
+            background: rgba(0, 0, 0, 0.4);
+        }
+
+        /* Loader & Toast */
+        #loader { transition: opacity 0.5s ease; }
+        .toast {
+            position: fixed; bottom: 20px; right: -300px;
+            background: rgba(16, 185, 129, 0.2); border: 1px solid rgba(16, 185, 129, 0.4);
+            backdrop-filter: blur(10px); padding: 12px 24px; border-radius: 50px;
+            display: flex; align-items: center; gap: 10px; color: #34d399; font-weight: 600;
+            transition: right 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55); z-index: 50;
+        }
+        .toast.show { right: 20px; }
+
+        /* Content fade in */
+        .fade-in-up { animation: fadeInUp 0.8s ease forwards; opacity: 0; transform: translateY(20px); }
+        .delay-1 { animation-delay: 0.1s; }
+        .delay-2 { animation-delay: 0.2s; }
+        .delay-3 { animation-delay: 0.3s; }
+
+        @keyframes fadeInUp { to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="antialiased min-h-screen flex flex-col">
+
+    <!-- Ambient Background -->
+    <div class="bg-orb orb-1"></div>
+    <div class="bg-orb orb-2"></div>
+    <div class="bg-orb orb-3"></div>
+
+    <!-- Loading Overlay -->
+    <div id="loader" class="fixed inset-0 bg-black/90 z-50 flex flex-col items-center justify-center backdrop-blur-md">
+        <div class="w-16 h-16 border-4 border-gray-700 border-t-sky-500 rounded-full animate-spin mb-4"></div>
+        <h2 class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-sky-400 to-purple-500 tracking-wider">INITIATING AURATRACK...</h2>
+    </div>
+
+    <!-- Main App Container -->
+    <div id="app-content" class="container mx-auto px-4 py-8 flex-grow flex flex-col hidden">
+        
+        <!-- Header -->
+        <header class="flex flex-col md:flex-row justify-between items-center mb-10 fade-in-up">
+            <div class="mb-6 md:mb-0 text-center md:text-left">
+                <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight mb-2">
+                    <span class="text-white">Aura</span><span class="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-purple-500">Track</span>
+                </h1>
+                <p class="text-gray-400 font-medium">Your personal growth dashboard.</p>
+            </div>
+
+            <!-- Profile Summary Glass Pill -->
+            <div class="glass-card px-6 py-3 flex items-center gap-6">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-sky-500 to-purple-600 flex items-center justify-center shadow-lg shadow-sky-500/20">
+                        <i class="fa-solid fa-user text-white"></i>
+                    </div>
+                    <div>
+                        <div class="text-xs text-gray-400 uppercase tracking-wider font-bold">Profile</div>
+                        <div class="text-sm font-semibold">14 Y/O &bull; LBN</div>
+                    </div>
+                </div>
+                <div class="h-8 w-px bg-gray-700/50"></div>
+                <div>
+                    <div class="text-xs text-gray-400 uppercase tracking-wider font-bold">Stats</div>
+                    <div class="text-sm font-semibold"><span class="text-sky-400">170</span>cm &bull; <span class="text-purple-400">76</span>kg</div>
+                </div>
+                <div class="h-8 w-px bg-gray-700/50"></div>
+                <div>
+                    <div class="text-xs text-gray-400 uppercase tracking-wider font-bold">Goal</div>
+                    <div class="text-sm font-semibold text-emerald-400"><i class="fa-solid fa-fire text-xs mr-1"></i> Cut</div>
+                </div>
+            </div>
+        </header>
+
+        <main class="grid grid-cols-1 lg:grid-cols-12 gap-8 flex-grow">
+            
+            <!-- Left Column: Diet Tracker (Spans 8 cols) -->
+            <div class="lg:col-span-8 flex flex-col gap-6 fade-in-up delay-1">
+                
+                <div class="flex justify-between items-end mb-2">
+                    <div>
+                        <h2 class="text-2xl font-bold flex items-center gap-3">
+                            <i class="fa-solid fa-utensils text-sky-400"></i> Daily Nutrition
+                        </h2>
+                        <p class="text-gray-400 text-sm mt-1">Log your meals to stay in a caloric deficit.</p>
+                    </div>
+                    
+                    <!-- Date Selector -->
+                    <div class="glass-card flex items-center p-1 rounded-xl">
+                        <button id="prev-day" class="p-2 hover:bg-white/10 rounded-lg transition"><i class="fa-solid fa-chevron-left"></i></button>
+                        <div id="current-date-display" class="px-4 font-semibold text-sm w-36 text-center">Today</div>
+                        <button id="next-day" class="p-2 hover:bg-white/10 rounded-lg transition" disabled><i class="fa-solid fa-chevron-right text-gray-600"></i></button>
+                    </div>
+                </div>
+
+                <!-- Meals Container -->
+                <div class="glass-card p-6 flex flex-col gap-6" id="meals-container">
+                    <!-- Dynamic Meals Will Be Injected Here -->
+                </div>
+            </div>
+
+            <!-- Right Column: Gym Tracker & Tips (Spans 4 cols) -->
+            <div class="lg:col-span-4 flex flex-col gap-8 fade-in-up delay-2">
+                
+                <!-- Gym Tracker -->
+                <div>
+                    <div class="flex justify-between items-end mb-4">
+                        <h2 class="text-2xl font-bold flex items-center gap-3">
+                            <i class="fa-solid fa-dumbbell text-purple-400"></i> Weekly Gym
+                        </h2>
+                        <span class="text-xs font-bold bg-purple-500/20 text-purple-300 px-3 py-1 rounded-full border border-purple-500/30">Target: 3-4x</span>
+                    </div>
+
+                    <div class="glass-card p-6">
+                        <div class="flex justify-between items-center mb-6">
+                            <span class="text-sm font-semibold text-gray-300">This Week's Progress</span>
+                            <span id="gym-count" class="text-xl font-bold text-white">0/7</span>
+                        </div>
+                        
+                        <div class="grid grid-cols-4 gap-3 mb-3">
+                            <div class="gym-day glass-input border border-gray-700/50 rounded-xl p-3 flex flex-col items-center justify-center gap-1 group" data-day="Mon">
+                                <span class="text-xs text-gray-400 group-hover:text-white transition">MON</span>
+                                <i class="fa-solid fa-check opacity-0 transform scale-50 transition-all duration-300 gym-check"></i>
+                            </div>
+                            <div class="gym-day glass-input border border-gray-700/50 rounded-xl p-3 flex flex-col items-center justify-center gap-1 group" data-day="Tue">
+                                <span class="text-xs text-gray-400 group-hover:text-white transition">TUE</span>
+                                <i class="fa-solid fa-check opacity-0 transform scale-50 transition-all duration-300 gym-check"></i>
+                            </div>
+                            <div class="gym-day glass-input border border-gray-700/50 rounded-xl p-3 flex flex-col items-center justify-center gap-1 group" data-day="Wed">
+                                <span class="text-xs text-gray-400 group-hover:text-white transition">WED</span>
+                                <i class="fa-solid fa-check opacity-0 transform scale-50 transition-all duration-300 gym-check"></i>
+                            </div>
+                            <div class="gym-day glass-input border border-gray-700/50 rounded-xl p-3 flex flex-col items-center justify-center gap-1 group" data-day="Thu">
+                                <span class="text-xs text-gray-400 group-hover:text-white transition">THU</span>
+                                <i class="fa-solid fa-check opacity-0 transform scale-50 transition-all duration-300 gym-check"></i>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-3 gap-3">
+                            <div class="gym-day glass-input border border-gray-700/50 rounded-xl p-3 flex flex-col items-center justify-center gap-1 group" data-day="Fri">
+                                <span class="text-xs text-gray-400 group-hover:text-white transition">FRI</span>
+                                <i class="fa-solid fa-check opacity-0 transform scale-50 transition-all duration-300 gym-check"></i>
+                            </div>
+                            <div class="gym-day glass-input border border-gray-700/50 rounded-xl p-3 flex flex-col items-center justify-center gap-1 group" data-day="Sat">
+                                <span class="text-xs text-gray-400 group-hover:text-white transition">SAT</span>
+                                <i class="fa-solid fa-check opacity-0 transform scale-50 transition-all duration-300 gym-check"></i>
+                            </div>
+                            <div class="gym-day glass-input border border-gray-700/50 rounded-xl p-3 flex flex-col items-center justify-center gap-1 group" data-day="Sun">
+                                <span class="text-xs text-gray-400 group-hover:text-white transition">SUN</span>
+                                <i class="fa-solid fa-check opacity-0 transform scale-50 transition-all duration-300 gym-check"></i>
+                            </div>
+                        </div>
+                        
+                        <!-- Progress bar -->
+                        <div class="w-full bg-gray-800 rounded-full h-2 mt-6 overflow-hidden">
+                            <div id="gym-progress-bar" class="bg-gradient-to-r from-purple-500 to-sky-400 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Diet Blueprint (Lebanon Context) -->
+                <div class="fade-in-up delay-3 relative overflow-hidden glass-card p-6 border-emerald-500/30">
+                    <!-- Glow effect -->
+                    <div class="absolute -top-10 -right-10 w-32 h-32 bg-emerald-500/20 rounded-full filter blur-3xl"></div>
+                    
+                    <h3 class="text-lg font-bold text-emerald-400 mb-3 flex items-center gap-2">
+                        <i class="fa-solid fa-leaf"></i> 76kg Weight Loss Guide
+                    </h3>
+                    <p class="text-sm text-gray-300 mb-4 leading-relaxed">
+                        To lose weight at 14, focus on eating whole, nutritious foods and controlling portions rather than extreme calorie counting. 
+                    </p>
+                    <ul class="space-y-3 text-sm text-gray-400">
+                        <li class="flex items-start gap-2">
+                            <i class="fa-solid fa-check text-emerald-500 mt-1 text-xs"></i>
+                            <span><strong class="text-white">Protein Focus:</strong> Grilled Shish Tawook, lean Kafta, eggs, or Greek yogurt/Labneh (low fat).</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <i class="fa-solid fa-check text-emerald-500 mt-1 text-xs"></i>
+                            <span><strong class="text-white">Smart Carbs:</strong> Swap white bread for whole wheat Pita, bulgur, or sweet potatoes.</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <i class="fa-solid fa-check text-emerald-500 mt-1 text-xs"></i>
+                            <span><strong class="text-white">Lebanese Twist:</strong> Load up on Tabbouleh and Fattoush, but ask for less olive oil and avoid fried bread. Hummus is great, but stick to 2-3 tablespoons!</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Save Toast Notification -->
+    <div id="toast" class="toast shadow-lg shadow-emerald-500/20">
+        <i class="fa-solid fa-cloud-arrow-up"></i>
+        <span>Progress Saved Syncing...</span>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Environment variables provided by the platform
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'auratrack-dev-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
+            // Mock config for local testing if env vars missing
+            apiKey: "mock-key", projectId: "mock-project"
+        };
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+
+        // State variables
+        let currentUser = null;
+        let selectedDate = new Date(); // Start with today
+        let typingTimer;
+        let isSetupComplete = false;
+        const doneTypingInterval = 1000; // 1 second debounce for saving inputs
+
+        // Meal categories template
+        const mealCategories = [
+            { id: 'breakfast', name: 'Breakfast', icon: 'fa-mug-hot', color: 'text-yellow-400' },
+            { id: 'lunch', name: 'Lunch', icon: 'fa-bowl-rice', color: 'text-orange-400' },
+            { id: 'dinner', name: 'Dinner', icon: 'fa-burger', color: 'text-rose-400' },
+            { id: 'snacks', name: 'Snacks', icon: 'fa-apple-whole', color: 'text-green-400' }
+        ];
+
+        // --- UI Setup Functions ---
+        function renderMeals() {
+            const container = document.getElementById('meals-container');
+            container.innerHTML = ''; // Clear current
+
+            mealCategories.forEach((cat, index) => {
+                const isLast = index === mealCategories.length - 1;
+                const html = `
+                    <div class="meal-group relative group" data-meal-id="${cat.id}">
+                        <div class="flex flex-col md:flex-row gap-4 items-start md:items-center">
+                            
+                            <!-- Checkbox and Label -->
+                            <div class="w-full md:w-1/3 flex items-center">
+                                <label class="cbx">
+                                    <input type="checkbox" id="check-${cat.id}" class="meal-checkbox" />
+                                    <span>
+                                        <svg width="12px" height="10px" viewbox="0 0 12 10">
+                                            <polyline points="1.5 6 4.5 9 10.5 1"></polyline>
+                                        </svg>
+                                    </span>
+                                    <span class="flex items-center gap-2 text-white">
+                                        <i class="fa-solid ${cat.icon} ${cat.color} opacity-80"></i> 
+                                        ${cat.name}
+                                    </span>
+                                </label>
+                            </div>
+
+                            <!-- Input Field -->
+                            <div class="w-full md:w-2/3 relative">
+                                <input type="text" id="input-${cat.id}" 
+                                    class="glass-input w-full rounded-xl py-3 px-4 text-sm text-white placeholder-gray-500 focus:ring-0" 
+                                    placeholder="What did you have for ${cat.name.toLowerCase()}?"
+                                    autocomplete="off"
+                                >
+                            </div>
+                        </div>
+                        ${!isLast ? '<div class="h-px w-full bg-gray-800/50 mt-6 group-hover:bg-gray-700 transition duration-300"></div>' : ''}
+                    </div>
+                `;
+                container.insertAdjacentHTML('beforeend', html);
+            });
+
+            // Attach listeners to new elements
+            attachMealListeners();
+        }
+
+        function showToast() {
+            const toast = document.getElementById('toast');
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2500);
+        }
+
+        function updateDateDisplay() {
+            const display = document.getElementById('current-date-display');
+            const today = new Date();
+            const nextBtn = document.getElementById('next-day');
+            
+            // Check if selected is today
+            if (selectedDate.toDateString() === today.toDateString()) {
+                display.innerText = "Today";
+                nextBtn.disabled = true;
+                nextBtn.innerHTML = '<i class="fa-solid fa-chevron-right text-gray-600"></i>';
+                nextBtn.classList.remove('hover:bg-white/10');
+            } else {
+                const options = { weekday: 'short', month: 'short', day: 'numeric' };
+                display.innerText = selectedDate.toLocaleDateString('en-US', options);
+                nextBtn.disabled = false;
+                nextBtn.innerHTML = '<i class="fa-solid fa-chevron-right text-white"></i>';
+                nextBtn.classList.add('hover:bg-white/10');
+            }
+        }
+
+        function getWeekKey(d) {
+            // Get week string for Gym tracker (e.g. 2026-W39)
+            const date = new Date(d.getTime());
+            date.setHours(0, 0, 0, 0);
+            date.setDate(date.getDate() + 3 - (date.getDay() + 6) % 7);
+            const week1 = new Date(date.getFullYear(), 0, 4);
+            const weekNum = 1 + Math.round(((date.getTime() - week1.getTime()) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7);
+            return `${date.getFullYear()}-W${weekNum}`;
+        }
+
+        function getDateKey(d) {
+            // e.g. 2026-09-25
+            return d.toISOString().split('T')[0];
+        }
+
+        // --- Database Logic ---
+        async function saveMealData() {
+            if (!currentUser) return;
+            const dateKey = getDateKey(selectedDate);
+            const data = {};
+            
+            mealCategories.forEach(cat => {
+                const isChecked = document.getElementById(`check-${cat.id}`).checked;
+                const text = document.getElementById(`input-${cat.id}`).value;
+                data[cat.id] = { done: isChecked, text: text };
+            });
+
+            try {
+                // RULE 1: Strict paths
+                const docRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'daily_meals', dateKey);
+                await setDoc(docRef, data, { merge: true });
+                showToast();
+            } catch (error) {
+                console.error("Error saving meal data:", error);
+            }
+        }
+
+        async function loadMealData() {
+            if (!currentUser) return;
+            const dateKey = getDateKey(selectedDate);
+            
+            // Reset UI first
+            mealCategories.forEach(cat => {
+                const cb = document.getElementById(`check-${cat.id}`);
+                const input = document.getElementById(`input-${cat.id}`);
+                if(cb) cb.checked = false;
+                if(input) input.value = '';
+            });
+
+            try {
+                const docRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'daily_meals', dateKey);
+                const docSnap = await getDoc(docRef);
+                
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    mealCategories.forEach(cat => {
+                        if (data[cat.id]) {
+                            const cb = document.getElementById(`check-${cat.id}`);
+                            const input = document.getElementById(`input-${cat.id}`);
+                            if(cb) cb.checked = data[cat.id].done || false;
+                            if(input) input.value = data[cat.id].text || '';
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error("Error loading meal data:", error);
+            }
+        }
+
+        async function saveGymData(day, isActive) {
+            if (!currentUser) return;
+            const weekKey = getWeekKey(selectedDate);
+            
+            try {
+                const docRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'weekly_gym', weekKey);
+                const update = {};
+                update[day] = isActive;
+                await setDoc(docRef, update, { merge: true });
+                showToast();
+            } catch (error) {
+                console.error("Error saving gym data:", error);
+            }
+        }
+
+        async function loadGymData() {
+            if (!currentUser) return;
+            const weekKey = getWeekKey(selectedDate);
+            
+            // Reset UI
+            document.querySelectorAll('.gym-day').forEach(el => {
+                el.classList.remove('active');
+                el.querySelector('.gym-check').classList.remove('opacity-100', 'scale-100');
+                el.querySelector('.gym-check').classList.add('opacity-0', 'scale-50');
+                el.querySelector('span').classList.remove('text-white');
+            });
+
+            try {
+                const docRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'weekly_gym', weekKey);
+                const docSnap = await getDoc(docRef);
+                
+                let activeCount = 0;
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    document.querySelectorAll('.gym-day').forEach(el => {
+                        const day = el.getAttribute('data-day');
+                        if (data[day] === true) {
+                            el.classList.add('active');
+                            el.querySelector('.gym-check').classList.remove('opacity-0', 'scale-50');
+                            el.querySelector('.gym-check').classList.add('opacity-100', 'scale-100');
+                            el.querySelector('span').classList.add('text-white');
+                            activeCount++;
+                        }
+                    });
+                }
+                updateGymProgress(activeCount);
+            } catch (error) {
+                console.error("Error loading gym data:", error);
+            }
+        }
+
+        function updateGymProgress(count) {
+            document.getElementById('gym-count').innerText = `${count}/7`;
+            const percentage = (count / 7) * 100;
+            const bar = document.getElementById('gym-progress-bar');
+            bar.style.width = `${percentage}%`;
+            
+            // Color logic based on target (3-4 times)
+            if (count >= 3) {
+                bar.classList.remove('from-purple-500', 'to-sky-400');
+                bar.classList.add('from-emerald-500', 'to-emerald-300');
+            } else {
+                bar.classList.add('from-purple-500', 'to-sky-400');
+                bar.classList.remove('from-emerald-500', 'to-emerald-300');
+            }
+        }
+
+        // --- Interactions Setup ---
+        function attachMealListeners() {
+            mealCategories.forEach(cat => {
+                const checkbox = document.getElementById(`check-${cat.id}`);
+                const input = document.getElementById(`input-${cat.id}`);
+
+                // Save on checkbox toggle
+                checkbox.addEventListener('change', () => {
+                    saveMealData();
+                });
+
+                // Debounce save on text input
+                input.addEventListener('keyup', () => {
+                    clearTimeout(typingTimer);
+                    typingTimer = setTimeout(saveMealData, doneTypingInterval);
+                });
+                
+                input.addEventListener('keydown', () => {
+                    clearTimeout(typingTimer);
+                });
+            });
+        }
+
+        function setupGymListeners() {
+            document.querySelectorAll('.gym-day').forEach(el => {
+                el.addEventListener('click', (e) => {
+                    const day = el.getAttribute('data-day');
+                    const isActive = el.classList.contains('active');
+                    
+                    // Toggle visually immediately
+                    if(isActive) {
+                        el.classList.remove('active');
+                        el.querySelector('.gym-check').classList.remove('opacity-100', 'scale-100');
+                        el.querySelector('.gym-check').classList.add('opacity-0', 'scale-50');
+                        el.querySelector('span').classList.remove('text-white');
+                    } else {
+                        el.classList.add('active');
+                        el.querySelector('.gym-check').classList.remove('opacity-0', 'scale-50');
+                        el.querySelector('.gym-check').classList.add('opacity-100', 'scale-100');
+                        el.querySelector('span').classList.add('text-white');
+                    }
+                    
+                    // Count active and update bar locally before server response
+                    const activeCount = document.querySelectorAll('.gym-day.active').length;
+                    updateGymProgress(activeCount);
+
+                    // Save to server
+                    saveGymData(day, !isActive);
+                });
+            });
+        }
+
+        function setupDateNavigation() {
+            document.getElementById('prev-day').addEventListener('click', () => {
+                selectedDate.setDate(selectedDate.getDate() - 1);
+                updateDateDisplay();
+                loadMealData(); // Gym is weekly, we'll keep it visible but maybe refresh if week changes
+                loadGymData();
+            });
+
+            document.getElementById('next-day').addEventListener('click', () => {
+                const today = new Date();
+                // Prevent going into the future
+                if (selectedDate.toDateString() !== today.toDateString()) {
+                    selectedDate.setDate(selectedDate.getDate() + 1);
+                    updateDateDisplay();
+                    loadMealData();
+                    loadGymData();
+                }
+            });
+        }
+
+        // --- Authentication & Init ---
+        async function initApp() {
+            try {
+                // RULE 3: Auth Before Queries
+                if (initialAuthToken) {
+                    await signInWithCustomToken(auth, initialAuthToken);
+                } else {
+                    await signInAnonymously(auth);
+                }
+
+                // Initial UI rendering
+                renderMeals();
+                setupGymListeners();
+                setupDateNavigation();
+                updateDateDisplay();
+
+            } catch (error) {
+                console.error("Auth error:", error);
+                document.getElementById('loader').innerHTML = `<p class="text-red-500">Initialization failed. Please refresh.</p>`;
+            }
+        }
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentUser = user;
+                if (!isSetupComplete) {
+                    // Load data for the first time
+                    await loadMealData();
+                    await loadGymData();
+                    
+                    // Hide loader and show app
+                    setTimeout(() => {
+                        document.getElementById('loader').style.opacity = '0';
+                        setTimeout(() => {
+                            document.getElementById('loader').style.display = 'none';
+                            document.getElementById('app-content').classList.remove('hidden');
+                        }, 500);
+                    }, 1000); // Artificial delay to show cool loader
+                    
+                    isSetupComplete = true;
+                }
+            }
+        });
+
+        // Start initialization
+        initApp();
+
+    </script>
+</body>
+</html>
